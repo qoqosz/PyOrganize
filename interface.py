@@ -30,6 +30,16 @@ class Interface:
 					print 'Cannot add task'
 				else:
 					self.show_all()
+			elif re.search('\d+ tag', cmd):
+				if not self.tag(cmd):
+					print 'Cannot assaign tag'
+				else:
+					self.show_all()
+			elif re.search('\d+ due', cmd):
+				if not self.due(cmd):
+					print 'Cannot assaign due date'
+				else:
+					self.show_all()		
 			elif cmd == 'save':
 				save(self.db)
 
@@ -84,6 +94,41 @@ class Interface:
 							return True
 		return False
 
+	def tag(self, cmd):
+		pattern = '(\d+) tag (.*?)$'
+		match = re.match(pattern, cmd)
+		
+		if match:
+			n = int(match.group(1))
+			i = 0
+			for node in self.db.query_all():
+				i += 1
+				if i == n:
+					if isinstance(node, Action) or isinstance(node, Project):
+						t = match.group(2)
+						t = t.split(' ')
+						for x in t:
+							node.tags.append(x)
+						return True
+		return False
+
+	def due(self, cmd):
+		pattern = '(\d+) due (\d{1,2}-\d{1,2}-\d{4}).*?'
+		match = re.match(pattern, cmd)
+		
+		if match:
+			n = int(match.group(1))
+			date = match.group(2)
+			i = 0
+			for node in self.db.query_all():
+				i += 1
+				if i == n:
+					if isinstance(node, Action) or isinstance(node, Project):
+						node.due_date = date
+						return True
+		return False
+
+
 
 def _format_item(item):
 	ret = ''
@@ -93,6 +138,12 @@ def _format_item(item):
 	elif isinstance(item, Project):
 		ret = '\t\t' + item.name + '\n\t\t' + ('=' * len(item.name))
 	elif isinstance(item, Action):
-		ret = '\t\t\t [' + ('X' if item.is_done else ' ') + '] ' + item.name
+		ret = '\t\t [' + ('X' if item.is_done else ' ') + '] ' + item.name
+		if item.tags or item.due_date:
+			ret = ret + '\n\t\t     '
+			if item.due_date:
+				ret = ret + '@' + item.due_date + '  '
+			if item.tags:
+				ret = ret + ', '.join(['+' + str(x) for x in item.tags])
 
 	return ret

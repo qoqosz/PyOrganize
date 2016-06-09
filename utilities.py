@@ -39,6 +39,20 @@ class Action(object):
 	def mark_archieved(self):
 		self.is_archieved =  True
 
+	def get(self, attr):
+		if attr == 'name':
+			return self.name
+		elif attr == 'description':
+			return self.description
+		elif attr == 'done':
+			return self.is_done
+		elif attr == 'archieved':
+			return self.is_archieved
+		elif attr == 'due':
+			return self.due_date
+		elif attr == 'tag':
+			return self.tags
+
 
 class Project(Action):
 	"""Project derives from Action class and is a collection of actions.
@@ -170,13 +184,21 @@ class DataBase:
 				for action in sorted(project.actions, key=sort_by_done):
 					yield action
 			for action in sorted(area.actions, key=sort_by_done):
-				yield action			
+				yield action
+
+	def query(self, filter={}):
+		sort_by_done = lambda x: x.is_done
+		# yield only if elem fullfills requirements
+		# @special check function for that
+
+	#def _filter_node(filter={}):
+
 
 
 def save(db, file_name=None):
 	if not file_name:
 		file_name = _db_file_name
-		
+
 	data = ET.Element('data')
 
 	for area in db:
@@ -195,6 +217,13 @@ def save(db, file_name=None):
 				if task.description:
 					desc = ET.SubElement(task_elem, 'description')
 					desc.text = task.description
+				if task.tags:
+					for tag_name in task.tags:
+						tag = ET.SubElement(task_elem, 'tag')
+						tag.text = tag_name
+				if task.due_date:
+					due = ET.SubElement(task_elem, 'due')
+					due.text = task.due_date
 
 		for task in area.actions:
 			task_elem = ET.SubElement(area_elem, 'action', task.attributes())
@@ -202,6 +231,13 @@ def save(db, file_name=None):
 			if task.description:
 				desc = ET.SubElement(task_elem, 'description')
 				desc.text = task.description
+			if task.tags:
+				for tag_name in task.tags:
+					tag = ET.SubElement(task_elem, 'tag')
+					tag.text = tag_name
+			if task.due_date:
+				due = ET.SubElement(task_elem, 'due')
+				due.text = task.due_date
 
 	fOut = open(file_name, 'w')
 	fOut.write(_prettify(ET.tostring(data, encoding='utf-8', method='xml')))
@@ -265,3 +301,7 @@ def _eat_action(action, items):
 	 for node in items:
 	 	if node.tag == 'description':
 	 		action.description = node.text
+	 	if node.tag == 'tag':
+	 		action.tags.append(node.text)
+	 	if node.tag == 'due':
+	 		action.due_date = node.text
