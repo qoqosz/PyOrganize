@@ -186,12 +186,40 @@ class DataBase:
 			for action in sorted(area.actions, key=sort_by_done):
 				yield action
 
-	def query(self, filter={}):
-		sort_by_done = lambda x: x.is_done
-		# yield only if elem fullfills requirements
-		# @special check function for that
+	def query(self, args={}):
+		def _check(node, filter):
+			for k, v in filter.iteritems():
+				if k == 'name':
+					if node.name != v:
+						return False
+				elif k == 'tag':
+					if v not in node.tags:
+						return False
+				elif k == 'due':
+					if node.due_date != v:
+						return False
+				elif k == 'done':
+					b = v not in ['False']
+					if node.is_done != b:
+						return False
+				elif k == 'archieved':
+					b = v not in ['False']
+					if node.is_archieved != b:
+						return False
+			return True
 
-	#def _filter_node(filter={}):
+		sort_by_done = lambda x: x.is_done
+
+		for area in self.areas:
+			yield area
+			for project in sorted(area.projects, key=sort_by_done):
+				yield project
+				for action in sorted(project.actions, key=sort_by_done):
+					if _check(action, args):
+						yield action
+			for action in sorted(area.actions, key=sort_by_done):
+				if _check(action, args):
+					yield action
 
 
 
