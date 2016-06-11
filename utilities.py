@@ -3,8 +3,10 @@ try:
 except ImportError:
     import xml.etree.ElementTree as ET
 import xml.dom.minidom # just to prettify the output
+import os
 
 _db_file_name = ''
+_EMPTY_DB = '<?xml version="1.0" encoding="utf-8"?><data><area name="Inbox"/></data>'
 
 class Action(object):
     """Define basic building block - the action.
@@ -14,6 +16,7 @@ class Action(object):
         self.description = description
         self.is_done = False
         self.is_archieved = False
+        self.is_deleted = False
         self.due_date = None
         self.tags = []
 
@@ -52,6 +55,10 @@ class Action(object):
             return self.due_date
         elif attr == 'tag':
             return self.tags
+
+    def delete(self):
+        self.is_deleted = True
+        self.is_archieved = True
 
 
 class Project(Action):
@@ -187,24 +194,31 @@ class DataBase:
                 yield action
 
     def query(self, args={}):
+        def _check_name(name, name_list):
+            x = name.lower()
+            y = [z.lower() for z in name_list]
+
+            for i in y:
+                if i in x:
+                    return True
+            return False
+
         def _check(node, filter):
             for k, v in filter.iteritems():
                 if k == 'name':
-                    if node.name != v:
+                    if not _check_name(node.name, v):
                         return False
                 elif k == 'tag':
-                    if v not in node.tags:
+                    if not (set(node.tags) & set(v)):
                         return False
                 elif k == 'due':
-                    if node.due_date != v:
+                    if not (set([node.due_date]) & set(v)):
                         return False
                 elif k == 'done':
-                    b = v not in ['False']
-                    if node.is_done != b:
+                    if not (set([node.is_done]) & set(v)):
                         return False
-                elif k == 'archieved':
-                    b = v not in ['False']
-                    if node.is_archieved != b:
+                elif k == 'arch':
+                    if not (set([node.is_archieved]) & set(v)):
                         return False
             return True
 
@@ -224,55 +238,70 @@ class DataBase:
 
 
 def save(db, file_name=None):
+    """Add save_are, save_project,...  fncs insidethis one
+    """
     if not file_name:
         file_name = _db_file_name
 
     data = ET.Element('data')
 
     for area in db:
-        area_elem = ET.SubElement(data, 'area', area.attributes())
+        if not area.is_deleted:
+            area_elem = ET.SubElement(data, 'area', area.attributes())
 
-        for proj in area.projects:
-            proj_elem = ET.SubElement(area_elem, 'project', proj.attributes())
+            for proj in area.projects:
+                if not proj.is_deleted:
+                    proj_elem = ET.SubElement(area_elem, 'project', proj.attributes())
 
-            if proj.description:
-                desc = ET.SubElement(proj_elem, 'description')
-                desc.text = proj.description
+                    if proj.description:
+                        desc = ET.SubElement(proj_elem, 'description')
+                        desc.text = proj.description
+                    if proj.due_date:
+                        due = ET.SubElement(proj_elem, 'due')
+                        due.text = proj.due_date
 
-            for task in proj.actions:
-                task_elem = ET.SubElement(proj_elem, 'action', task.attributes())
+                    for task in proj.actions:
+                        if not task.is_deleted:
+                            task_elem = ET.SubElement(proj_elem, 'action', task.attributes())
 
-                if task.description:
-                    desc = ET.SubElement(task_elem, 'description')
-                    desc.text = task.description
-                if task.tags:
-                    for tag_name in task.tags:
-                        tag = ET.SubElement(task_elem, 'tag')
-                        tag.text = tag_name
-                if task.due_date:
-                    due = ET.SubElement(task_elem, 'due')
-                    due.text = task.due_date
+                            if task.description:
+                                desc = ET.SubElement(task_elem, 'description')
+                                desc.text = task.description
+                            if task.tags:
+                                for tag_name in task.tags:
+                                    tag = ET.SubElement(task_elem, 'tag')
+                                    tag.text = tag_name
+                            if task.due_date:
+                                due = ET.SubElement(task_elem, 'due')
+                                due.text = task.due_date
 
-        for task in area.actions:
-            task_elem = ET.SubElement(area_elem, 'action', task.attributes())
+                for task in area.actions:
+                    if not task.is_deleted:
+                        task_elem = ET.SubElement(area_elem, 'action', task.attributes())
 
-            if task.description:
-                desc = ET.SubElement(task_elem, 'description')
-                desc.text = task.description
-            if task.tags:
-                for tag_name in task.tags:
-                    tag = ET.SubElement(task_elem, 'tag')
-                    tag.text = tag_name
-            if task.due_date:
-                due = ET.SubElement(task_elem, 'due')
-                due.text = task.due_date
+                        if task.description:
+                            desc = ET.SubElement(task_elem, 'description')
+                            desc.text = task.description
+                        if task.tags:
+                            for tag_name in task.tags:
+                                tag = ET.SubElement(task_elem, 'tag')
+                                tag.text = tag_name
+                        if task.due_date:
+                            due = ET.SubElement(task_elem, 'due')
+                            due.text = task.due_date
 
     fOut = open(file_name, 'w')
     fOut.write(_prettify(ET.tostring(data, encoding='utf-8', method='xml')))
+    fOut.close()
 
 def load(file_name):
     global _db_file_name
     _db_file_name = file_name
+
+    if not os.path.isfile(file_name):
+        fOut = open(file_name, 'w')
+        fOut.write(_EMPTY_DB)
+        fOut.close()
 
     tasks_tree = ET.parse(file_name).getroot()
     db = DataBase()
@@ -315,9 +344,10 @@ def _eat_project(project, items):
     for node in items:
         if node.tag == 'description':
             project.description = node.text
-
         elif node.tag == 'action':
             _process_action(project, node)
+        elif node.tag == 'due':
+            project.due_date = node.text
 
 def _process_action(object, node):
     action = Action(node.attrib.get('name'))
