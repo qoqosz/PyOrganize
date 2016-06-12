@@ -4,14 +4,52 @@ import datetime
 import weakref
 from utilities import *
 
-"""
-@todo add s proj fill -> select project 
-"""
+
+class Alias:
+    def __init__(self, alias_file):
+        self.alias = {}
+        self.read(alias_file)
+
+    def read(self, alias_file):
+        self.alias = {}
+        with open(alias_file, 'r') as f:
+            for line in f:
+                a = re.search(r'"(.*?)":"(.*?)"', line)
+                if a:
+                    short, long = a.groups()
+                    self.alias[short] = long
+
+    def get(self, name):
+        return self.alias.get(name)
+
+
+class Options:
+    def __init__(self, options_file):
+        self.options = {}
+        self.read(options_file)
+
+    def read(self, options_file):
+        self.options = {}
+        with open(options_file, 'r') as f:
+            for line in f:
+                a = re.search('^\'(.*?)\': (.*?)$', line)
+                if a:
+                    opt, val = a.groups()
+                    if val.lower() in ['true', 'false']:
+                        val = val.lower() in ['true']
+
+                    self.options[opt] = val
+
+    def get(self):
+        return self.options
+
 
 class Interface:
     def __init__(self, db):
         self.db = db
         self.user_filter = {'arch': [False]}
+        self.alias = Alias('alias.txt')
+        self.options = Options('options.txt').get()
 
         self.commands = [
             [r'^list', self._list, 'Cannot list all items'],
@@ -26,10 +64,11 @@ class Interface:
             [r'^edit \d+', self._edit, 'Cannot edit an item'],
             [r'^move \d+ to \d+', self._move, 'Cannot move an item'],
             [r'^save', self._save, ''],
-            [r'^select', self._select, 'Wrong query syntax'],
-            [r'^s', self._select, 'Wrong query syntax'],
+            [r'^show', self._show, ''],
+            [r'^(select|s)', self._select, 'Wrong query syntax'],
+            [r'^v ', self._alias, ''],
             [r'^help', self._help, ''],
-            [r'^quit', None, None]
+            [r'^(q|quit)$', None, None]
         ]
 
     def default_filter(self):
@@ -46,17 +85,34 @@ class Interface:
             cmd = raw_input('> ')
             cmd = cmd.lstrip().rstrip()
 
-            if cmd == 'quit':
+            if cmd == 'quit' or cmd == 'q':
                 break
 
-            for opt in self.commands:
-                if re.search(opt[0], cmd):
-                    if not opt[1](cmd):
-                        print opt[2]
-                    else:
-                        self._show_query(self.user_filter)
-                    break
+            self._proceed_cmd(cmd)
             
+    def _proceed_cmd(self, cmd, show=True):
+        for opt in self.commands:
+            if re.search(opt[0], cmd):
+                if not opt[1](cmd):
+                    print opt[2]
+                else:
+                    if show:
+                        self._show_query(self.user_filter)
+                break       
+
+    def _show(self, cmd):
+        match = re.search('(show.*?)$', cmd)
+        if match:
+            option = match.group(1)
+
+            if option in self.options:
+                self.options[option] = not self.options[option]
+            else:
+                self.options[option] = True
+            return True
+
+        return False       
+
     def _get_item(self, n):
         """Get an n-th item from the list given a user filter is applied.
         """
@@ -65,6 +121,18 @@ class Interface:
             i += 1
             if i == n:
                 return weakref.ref(node)
+        return False
+
+    def _alias(self, cmd):
+        match = re.search('v (.*?)(\s.*?)?$', cmd)
+        if match:
+            cmd = self.alias.get(match.group(1))
+
+            if match.group(2):
+                cmd += match.group(2)
+
+            self._proceed_cmd(cmd, show=False)
+            return True
         return False
 
     def _move(self, cmd):
@@ -128,7 +196,7 @@ class Interface:
         """Filter mechanism.
         """
         self.user_filter = self.default_filter()
-        tags = ['tag', 'due', 'name', 'done', 'arch']
+        tags = ['tag', 'due', 'name', 'done', 'arch', 'act', 'proj', 'area']
         tags_pattern = '(' + '|'.join(tags) + ')'
         pos = [m.start() for m in re.finditer(tags_pattern, cmd)]
         pos.append(None)
@@ -165,7 +233,7 @@ class Interface:
         i = 0
         for node in self.db.query(args):
             i += 1
-            print str(i) + _format_item(node)
+            print str(i) + _format_item(node, self.options)
         return True
 
     def _mark_done(self, cmd, undo=False):
@@ -266,6 +334,11 @@ def _interpret_date(line):
     elif re.search('(end-of-week|eow)', line):
         date = datetime.date.today()
         date = date + datetime.timedelta(days=(11 - date.weekday())%7)
+    elif re.search('(end-of-month|eom)', line):
+        date = datetime.date.today()
+        date = date - datetime.timedelta(days=date.day - 1)
+        date = date + datetime.timedelta(days=31)
+        date = date - datetime.timedelta(days=date.day)
     else:
         pattern = '(\d{1,2})[\\\\/:\s\.](\d{1,2})[\\\\/:\s\.](\d{4})'
         match = re.search(pattern, line)
@@ -273,14 +346,15 @@ def _interpret_date(line):
         if not match:
             return None
         else:
-            day = match.group(1)
-            month = match.group(2)
-            year = match.group(3)
+            print match.groups()
+            day = int( match.group(1) )
+            month = int( match.group(2) )
+            year = int( match.group(3) )
             date = datetime.datetime(year, month, day)
             
     return date.strftime('%d-%m-%Y')
 
-def _format_item(item):
+def _format_item(item, options):
     ret = ''
 
     if isinstance(item, Area):
@@ -288,19 +362,20 @@ def _format_item(item):
 
     elif isinstance(item, Project):
         ret = '\t\t' + item.name
-        if item.due_date:
-            ret = ret + '\t@' + item.due_date
+        if item.due_date and options.get('show_due_date'):
+            ret = ret + ' @ ' + item.due_date
         ret += '\n\t\t' + ('=' * len(item.name))
 
     elif isinstance(item, Action):
         ret = '\t\t [' + ('X' if item.is_done else ' ') + '] ' + item.name
-        if item.description:
+        if item.description and options.get('show_description'):
             ret = ret + '\n\t\t\t"' + item.description + '"'
-        if item.tags or item.due_date:
+        if (item.tags or item.due_date) and \
+            (options.get('show_tags') or options.get('show_due_date')):
             ret = ret + '\n\t\t     '
-            if item.due_date:
+            if item.due_date and options.get('show_due_date'):
                 ret = ret + '@' + item.due_date + '  '
-            if item.tags:
+            if item.tags and options.get('show_tags'):
                 ret = ret + ', '.join(['+' + str(x) for x in item.tags])
 
     return ret

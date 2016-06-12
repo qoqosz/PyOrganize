@@ -203,9 +203,23 @@ class DataBase:
                     return True
             return False
 
-        def _check(node, filter):
+        def _check_area(node, filter):
             for k, v in filter.iteritems():
-                if k == 'name':
+                if k == 'area':
+                    if not _check_name(node.name, v):
+                        return False
+            return True
+
+        def _check_proj(node, filter):
+            for k, v in filter.iteritems():
+                if k == 'proj':
+                    if not _check_name(node.name, v):
+                        return False
+            return True
+
+        def _check_act(node, filter):
+            for k, v in filter.iteritems():
+                if k == 'act':
                     if not _check_name(node.name, v):
                         return False
                 elif k == 'tag':
@@ -225,15 +239,20 @@ class DataBase:
         sort_by_done = lambda x: x.is_done
 
         for area in self.areas:
-            yield area
-            for project in sorted(area.projects, key=sort_by_done):
-                yield project
-                for action in sorted(project.actions, key=sort_by_done):
-                    if _check(action, args):
+            if _check_area(area, args):
+                yield area
+
+                for project in sorted(area.projects, key=sort_by_done):
+                    if _check_proj(project, args):
+                        yield project
+
+                        for action in sorted(project.actions, key=sort_by_done):
+                            if _check_act(action, args):
+                                yield action
+                                
+                for action in sorted(area.actions, key=sort_by_done):
+                    if _check_act(action, args):
                         yield action
-            for action in sorted(area.actions, key=sort_by_done):
-                if _check(action, args):
-                    yield action
 
 
 
