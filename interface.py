@@ -3,7 +3,13 @@ import copy
 import datetime
 import weakref
 from utilities import *
-
+try:
+    import readline
+except ImportError:
+    print('Module readline not available.')
+else:
+    import rlcompleter
+    readline.parse_and_bind('tab: complete')
 
 class Alias:
     def __init__(self, alias_file):
@@ -44,6 +50,26 @@ class Options:
         return self.options
 
 
+class MyCompleter(object):  # Custom completer
+    """Via http://stackoverflow.com/a/7821956
+    """
+    def __init__(self, options):
+        self.options = sorted(options)
+
+    def complete(self, text, state):
+        if state == 0:  # on first trigger, build possible matches
+            if text:  # cache matches (entries that start with entered text)
+                self.matches = [s for s in self.options 
+                                    if s and s.startswith(text)]
+            else:  # no text entered, all matches possible
+                self.matches = self.options[:]
+        # return match indexed by state
+        try: 
+            return self.matches[state]
+        except IndexError:
+            return None
+
+
 class Interface:
     def __init__(self, db):
         self.db = db
@@ -80,6 +106,13 @@ class Interface:
         """Main loop of an interface that reads and parses commands.
         """
         self._show_query(self.user_filter)
+
+        completer = MyCompleter(['list', 'done', 'undone', 'add proj',
+            'add', 'desc', 'del', 'tag', 'due', 'edit', 'move', 'save',
+            'show', 'select', 'help', 'quit', 'show_tags', 'show_description',
+            'show_due_date', 'today', 'tomorrow', 'yesterday'])
+        readline.set_completer(completer.complete)
+        readline.parse_and_bind('tab: complete')
 
         while True:
             cmd = raw_input('> ')
@@ -340,13 +373,12 @@ def _interpret_date(line):
         date = date + datetime.timedelta(days=31)
         date = date - datetime.timedelta(days=date.day)
     else:
-        pattern = '(\d{1,2})[\\\\/:\s\.](\d{1,2})[\\\\/:\s\.](\d{4})'
+        pattern = '(\d{1,2})[\\\\/:\s\.-](\d{1,2})[\\\\/:\s\.-](\d{4})'
         match = re.search(pattern, line)
 
         if not match:
             return None
         else:
-            print match.groups()
             day = int( match.group(1) )
             month = int( match.group(2) )
             year = int( match.group(3) )

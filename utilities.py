@@ -294,20 +294,20 @@ def save(db, file_name=None):
                                 due = ET.SubElement(task_elem, 'due')
                                 due.text = task.due_date
 
-                for task in area.actions:
-                    if not task.is_deleted:
-                        task_elem = ET.SubElement(area_elem, 'action', task.attributes())
+            for task in area.actions:
+                if not task.is_deleted:
+                    task_elem = ET.SubElement(area_elem, 'action', task.attributes())
 
-                        if task.description:
-                            desc = ET.SubElement(task_elem, 'description')
-                            desc.text = task.description
-                        if task.tags:
-                            for tag_name in task.tags:
-                                tag = ET.SubElement(task_elem, 'tag')
-                                tag.text = tag_name
-                        if task.due_date:
-                            due = ET.SubElement(task_elem, 'due')
-                            due.text = task.due_date
+                    if task.description:
+                        desc = ET.SubElement(task_elem, 'description')
+                        desc.text = task.description
+                    if task.tags:
+                        for tag_name in task.tags:
+                            tag = ET.SubElement(task_elem, 'tag')
+                            tag.text = tag_name
+                    if task.due_date:
+                        due = ET.SubElement(task_elem, 'due')
+                        due.text = task.due_date
 
     fOut = open(file_name, 'w')
     fOut.write(_prettify(ET.tostring(data, encoding='utf-8', method='xml')))

@@ -1,0 +1,3 @@
+'show_description': True
+'show_tags': True
+'show_due_date': True
