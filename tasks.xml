@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data>
+	<area name="Inbox">
+		<action archieved="False" done="False" name="Waiting to be categorized"/>
+	</area>
+	<area name="Office">
+		<project archieved="False" done="False" name="Project 1">
+			<action archieved="False" done="False" name="Task 1">
+				<tag>!!!</tag>
+				<tag>urgent</tag>
+			</action>
+			<action archieved="False" done="False" name="Task 2">
+				<tag>!</tag>
+				<due>12-06-2016</due>
+			</action>
+		</project>
+		<action archieved="False" done="True" name="Yet another task"/>
+	</area>
+</data>
