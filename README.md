@@ -1,4 +1,37 @@
 # PyOrganize
 Simple command-line todo app written in Python.
 
+![PyOrganize Main Screen](http://f.cl.ly/items/1a0x2Q3a2c0l0J1v232a/pyorganize.png)
 
+The application is designed to provide simple command line tool that helps users oragnize their tasks. However, PyOrganize is by no means a minimalistic app. It's focus is to provide simple interface to help user manage a list of reasonable number of tasks. This objective is met by means of simple query syntax.
+
+##The design
+There are three main types of items that are building blocks of a whole todo list.
+
+1. Area
+2. Project
+3. Action
+
+###Area
+Area is a collection of projects and actions that have some common factor.
+###Project
+Project is a collection of actions that define one major goal to acomplish.
+###Action
+Is a physical action one need to take.
+
+##Commands
+###Creating items
+At the moment, only Actions and Projects may be created from inside the application. Areas need to be specified manually in the tasks.xml file.
+Creating an item is done by the following command:
+```
+add <id> <name of a task>
+add proj <id> <name of a project>
+```
+where <id> is an id of a parent node (project or action), in which a new item will be created. At the creation user may specify only the name of an item.
+Further details may be specified by using:
+```
+done <id>
+undone <id>
+desc <id>
+del <id>
+```
