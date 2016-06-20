@@ -79,20 +79,21 @@ class Interface:
 
         self.commands = [
             [r'^list', self._list, 'Cannot list all items'],
-            [r'^done \d+', self._mark_done, 'Cannote locate an item'],
-            [r'^undone \d+', self._mark_undone, 'Cannot locate an item'],
-            [r'^add proj \d+', self._add, 'Cannot add project'],
-            [r'^add \d+', self._add, 'Cannot add task'],
-            [r'^desc \d+', self._desc, 'Cannot add task description'],
-            [r'^del \d+', self._del, 'Cannot delete task'],
-            [r'^tag \d+', self._tag, 'Cannot assaign tag'],
-            [r'^due \d+', self._due, 'Cannot assaign due date'],
-            [r'^edit \d+', self._edit, 'Cannot edit an item'],
-            [r'^move \d+ to \d+', self._move, 'Cannot move an item'],
+            [r'^done\s+\d+', self._mark_done, 'Cannote locate an item'],
+            [r'^undone\s+\d+', self._mark_undone, 'Cannot locate an item'],
+            [r'^add proj\s+\d+', self._add, 'Cannot add project'],
+            [r'^add\s+\d+', self._add, 'Cannot add task'],
+            [r'^desc\s+\d+', self._desc, 'Cannot add task description'],
+            [r'^del\s+\d+', self._del, 'Cannot delete task'],
+            [r'^tag\s+\d+', self._tag, 'Cannot assaign tag'],
+            [r'^due\s+\d+', self._due, 'Cannot assaign due date'],
+            [r'^edit\s+\d+', self._edit, 'Cannot edit an item'],
+            [r'^move\s+\d+\s+to\s+\d+', self._move, 'Cannot move an item'],
             [r'^save', self._save, ''],
             [r'^show', self._show, ''],
+            [r'^sort', self._sort, ''],
             [r'^(select|s)', self._select, 'Wrong query syntax'],
-            [r'^v ', self._alias, ''],
+            [r'^v\s+', self._alias, ''],
             [r'^help', self._help, ''],
             [r'^(q|quit)$', None, None]
         ]
@@ -101,6 +102,10 @@ class Interface:
         """Default filter is set to list all non-archieved tasks.
         """
         return {'arch': [False]}
+
+    def default_sort(self):
+        self.db._sort_by = lambda x: x.is_done
+        self.db._sort_rev = False
 
     def start(self):
         """Main loop of an interface that reads and parses commands.
@@ -122,6 +127,35 @@ class Interface:
                 break
 
             self._proceed_cmd(cmd)
+
+    def _sort(self, cmd):
+        pattern = '^sort\s+(name|tag|due|name|)\s*(asc|desc|)$'
+        match = re.match(pattern, cmd)
+
+        if match:
+            print 'Sorting'
+            by = match.group(1)
+            order = match.group(2)
+
+            if by == '' or by is None:
+                self.default_sort()
+
+            if order == 'desc':
+                self.db._sort_by = None
+                self.db._sort_rev = True
+            elif order == 'asc':
+                self.db._sort_by = None
+                self.db._sort_rev = False
+
+
+            if by == 'due':
+                self.db._sort_by = lambda x: datetime.datetime.strptime(x.due_date, 
+                    '%d-%m-%Y') if x.due_date else datetime.datetime.now()
+            elif by == 'name':
+                self.db._sort_by = lambda x: x.name
+
+            return True
+        return False
             
     def _proceed_cmd(self, cmd, show=True):
         for opt in self.commands:
@@ -157,7 +191,7 @@ class Interface:
         return False
 
     def _alias(self, cmd):
-        match = re.search('v (.*?)(\s.*?)?$', cmd)
+        match = re.search('v\s+(.*?)(\s.*?)?$', cmd)
         if match:
             cmd = self.alias.get(match.group(1))
 
@@ -172,7 +206,7 @@ class Interface:
         """Actions only.
         Move action from one project/area to another.
         """
-        match = re.search('move (\d+) to (\d+)', cmd)
+        match = re.search('move\s+(\d+)\s+to\s+(\d+)', cmd)
         if match:
             item = self._get_item( int(match.group(1)) )
             dest = self._get_item( int(match.group(2)) )
@@ -188,7 +222,7 @@ class Interface:
     def _edit(self, cmd):
         """Edit an item name.
         """
-        match = re.search('edit (\d+) (.*?)$', cmd)
+        match = re.search('edit\s+(\d+)\s+(.*?)$', cmd)
         if match:
             item = self._get_item( int(match.group(1)) )
             item().name = match.group(2)
@@ -207,7 +241,7 @@ class Interface:
         """delete = mark as archieved and set a is_deleted flag to True
         This way, at a program exit an item won't be saved
         """
-        pattern = 'del (\d+)$'
+        pattern = 'del\s+(\d+)$'
         match = re.match(pattern, cmd)
 
         if match:
@@ -272,7 +306,7 @@ class Interface:
     def _mark_done(self, cmd, undo=False):
         """Mark item as done.
         """
-        match = re.search('done (\d+)', cmd)
+        match = re.search('done\s+(\d+)', cmd)
 
         if match:
             item = self._get_item( int(match.group(1)) )
@@ -284,7 +318,7 @@ class Interface:
     def _desc(self, cmd):
         """Set a description of an item.
         """
-        match = re.search('desc (\d+) (.*?)$', cmd)
+        match = re.search('desc\s+(\d+)\s+(.*?)$', cmd)
 
         if match:
             item = self._get_item( int(match.group(1)) )
@@ -301,7 +335,7 @@ class Interface:
     def _add(self, cmd):
         """Add action or project.
         """
-        pattern = '(add proj|add) (\d+) (.*?)$'
+        pattern = '(add proj|add)\s+(\d+)\s+(.*?)$'
         match = re.match(pattern, cmd)
 
         if match:
@@ -324,9 +358,9 @@ class Interface:
         """Apply tags to an action.
         Tags may be given as a comma-separated list.
         """
-        pattern = 'tag (\d+) (.*?)$'
+        pattern = 'tag\s+(\d+)\s+(.*?)$'
         match = re.match(pattern, cmd)
-        
+
         if match:
             item = self._get_item( int(match.group(1)) )
 
@@ -342,7 +376,7 @@ class Interface:
     def _due(self, cmd):
         """Set a due date for an action or a project.
         """
-        pattern = 'due (\d+) (.*?)$'
+        pattern = 'due\s+(\d+)\s+(.*?)$'
         match = re.match(pattern, cmd)
         
         if match:

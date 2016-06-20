@@ -11,9 +11,14 @@
 			</action>
 			<action archieved="False" done="False" name="Task 2">
 				<tag>!</tag>
+				<tag>imr</tag>
+				<tag>y</tag>
+				<tag>jo</tag>
 				<due>12-06-2016</due>
 			</action>
 		</project>
-		<action archieved="False" done="True" name="Yet another task"/>
+		<action archieved="False" done="True" name="Yet another task">
+			<tag>koel</tag>
+		</action>
 	</area>
 </data>

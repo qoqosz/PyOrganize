@@ -167,6 +167,8 @@ class DataBase:
     """
     def __init__(self):
         self.areas = []
+        self._sort_by = lambda x: x.is_done
+        self._sort_rev = False
 
     def __iter__(self):
         """In fact we should iterate over everything,
@@ -236,21 +238,19 @@ class DataBase:
                         return False
             return True
 
-        sort_by_done = lambda x: x.is_done
-
         for area in self.areas:
             if _check_area(area, args):
                 yield area
 
-                for project in sorted(area.projects, key=sort_by_done):
+                for project in sorted(area.projects, key=self._sort_by, reverse=self._sort_rev):
                     if _check_proj(project, args):
                         yield project
 
-                        for action in sorted(project.actions, key=sort_by_done):
+                        for action in sorted(project.actions, key=self._sort_by, reverse=self._sort_rev):
                             if _check_act(action, args):
                                 yield action
                                 
-                for action in sorted(area.actions, key=sort_by_done):
+                for action in sorted(area.actions, key=self._sort_by, reverse=self._sort_rev):
                     if _check_act(action, args):
                         yield action
 
