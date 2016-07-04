@@ -5,9 +5,10 @@
 	</area>
 	<area name="Office">
 		<project archieved="False" done="False" name="Project 1">
-			<action archieved="False" done="False" name="Task 1">
+			<action archieved="True" done="False" name="Task 1">
 				<tag>!!!</tag>
 				<tag>urgent</tag>
+				<tag>DUpa</tag>
 			</action>
 			<action archieved="False" done="False" name="Task 2">
 				<tag>!</tag>
@@ -16,9 +17,11 @@
 				<tag>jo</tag>
 				<due>12-06-2016</due>
 			</action>
+			<action archieved="True" done="False" name="Task"/>
 		</project>
-		<action archieved="False" done="True" name="Yet another task">
+		<action archieved="True" done="True" name="Yet another task">
 			<tag>koel</tag>
+			<tag>dupa</tag>
 		</action>
 	</area>
 </data>
