@@ -1,5 +1,6 @@
 import re
 
+
 class Options:
     def __init__(self, options_file):
         self.options = {}

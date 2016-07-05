@@ -1,6 +1,7 @@
 class DataBase:
     """DataBase object stores all the information from the xml file into memory.
     """
+
     def __init__(self):
         self.areas = []
         self._sort_by = lambda x: x.is_done
@@ -20,7 +21,8 @@ class DataBase:
         self.areas.append(area)
 
     def query_all(self):
-        sort_by_done = lambda x: x.is_done
+        def sort_by_done(x):
+            return x.is_done
 
         for area in self.areas:
             yield area
@@ -78,14 +80,20 @@ class DataBase:
             if _check_area(area, args):
                 yield area
 
-                for project in sorted(area.projects, key=self._sort_by, reverse=self._sort_rev):
+                for project in sorted(area.projects,
+                                      key=self._sort_by,
+                                      reverse=self._sort_rev):
                     if _check_proj(project, args):
                         yield project
 
-                        for action in sorted(project.actions, key=self._sort_by, reverse=self._sort_rev):
+                        for action in sorted(project.actions,
+                                             key=self._sort_by,
+                                             reverse=self._sort_rev):
                             if _check_act(action, args):
                                 yield action
-                                
-                for action in sorted(area.actions, key=self._sort_by, reverse=self._sort_rev):
+
+                for action in sorted(area.actions,
+                                     key=self._sort_by,
+                                     reverse=self._sort_rev):
                     if _check_act(action, args):
                         yield action

@@ -3,6 +3,7 @@ import re
 
 import items as it
 
+
 def interpret_date(line):
     date = None
     if re.search('(today|td)', line):
@@ -13,7 +14,7 @@ def interpret_date(line):
         date = datetime.date.today() - datetime.timedelta(days=1)
     elif re.search('(end-of-week|eow)', line):
         date = datetime.date.today()
-        date = date + datetime.timedelta(days=(11 - date.weekday())%7)
+        date = date + datetime.timedelta(days=(11 - date.weekday()) % 7)
     elif re.search('(end-of-month|eom)', line):
         date = datetime.date.today()
         date = date - datetime.timedelta(days=date.day - 1)
@@ -26,12 +27,13 @@ def interpret_date(line):
         if not match:
             return None
         else:
-            day = int( match.group(1) )
-            month = int( match.group(2) )
-            year = int( match.group(3) )
+            day = int(match.group(1))
+            month = int(match.group(2))
+            year = int(match.group(3))
             date = datetime.datetime(year, month, day)
-            
+
     return date.strftime('%d-%m-%Y')
+
 
 def format_item(item, options):
     ret = ''
@@ -51,7 +53,7 @@ def format_item(item, options):
             ret = ret + '\n\t\t\t"' + item.description + '"'
 
         if (item.tags or item.due_date) and \
-            (options.get('show_tags') or options.get('show_due_date')):
+                (options.get('show_tags') or options.get('show_due_date')):
             ret = ret + '\n\t\t     '
 
             if item.due_date and options.get('show_due_date'):

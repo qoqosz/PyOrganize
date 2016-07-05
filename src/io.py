@@ -2,14 +2,13 @@ try:
     import xml.etree.cElementTree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
-import xml.dom.minidom # just to prettify the output
+import xml.dom.minidom  # just to prettify the output
 import os
 import db
 import items as it
 
 _db_file_name = ''
-_EMPTY_DB = \
-"""<?xml version="1.0" encoding="utf-8"?>
+_EMPTY_DB = """<?xml version="1.0" encoding="utf-8"?>
 <data>
     <area name="Inbox"/>
 </data>"""
@@ -29,7 +28,8 @@ def save(database, file_name=None):
 
             for proj in area.projects:
                 if not proj.is_deleted:
-                    proj_elem = ET.SubElement(area_elem, 'project', proj.attributes())
+                    proj_elem = ET.SubElement(area_elem, 'project',
+                                              proj.attributes())
 
                     if proj.description:
                         desc = ET.SubElement(proj_elem, 'description')
@@ -40,7 +40,8 @@ def save(database, file_name=None):
 
                     for task in proj.actions:
                         if not task.is_deleted:
-                            task_elem = ET.SubElement(proj_elem, 'action', task.attributes())
+                            task_elem = ET.SubElement(proj_elem, 'action',
+                                                      task.attributes())
 
                             if task.description:
                                 desc = ET.SubElement(task_elem, 'description')
@@ -55,7 +56,8 @@ def save(database, file_name=None):
 
             for task in area.actions:
                 if not task.is_deleted:
-                    task_elem = ET.SubElement(area_elem, 'action', task.attributes())
+                    task_elem = ET.SubElement(area_elem, 'action',
+                                              task.attributes())
 
                     if task.description:
                         desc = ET.SubElement(task_elem, 'description')
@@ -72,6 +74,7 @@ def save(database, file_name=None):
     fOut.write(_prettify(ET.tostring(data, encoding='utf-8', method='xml')))
     fOut.close()
 
+
 def load(file_name):
     global _db_file_name
     _db_file_name = file_name
@@ -87,10 +90,13 @@ def load(file_name):
 
     return database
 
+
 def _prettify(xml_string):
     """Return a pretty-printed XML string for the xml.
     """
-    return xml.dom.minidom.parseString(xml_string).toprettyxml(encoding='utf-8')
+    return xml.dom.minidom.parseString(xml_string).toprettyxml(
+        encoding='utf-8')
+
 
 def _eat_attributes(object, node):
     if 'done' in node.attrib:
@@ -100,12 +106,14 @@ def _eat_attributes(object, node):
         if node.attrib.get('archieved') == 'True':
             object.mark_archieved()
 
+
 def _eat_data(database, items):
     for node in items:
         if node.tag == 'area':
             area = it.Area(node.attrib.get('name'))
             _eat_area(area, node)
             database.append(area)
+
 
 def _eat_area(area, items):
     for node in items:
@@ -118,6 +126,7 @@ def _eat_area(area, items):
         elif node.tag == 'action':
             _process_action(area, node)
 
+
 def _eat_project(project, items):
     for node in items:
         if node.tag == 'description':
@@ -127,14 +136,16 @@ def _eat_project(project, items):
         elif node.tag == 'due':
             project.due_date = node.text
 
+
 def _process_action(object, node):
     action = it.Action(node.attrib.get('name'))
     _eat_action(action, node)
-    _eat_attributes(action, node)   
+    _eat_attributes(action, node)
     object.actions.append(action)
 
+
 def _eat_action(action, items):
-     for node in items:
+    for node in items:
         if node.tag == 'description':
             action.description = node.text
         if node.tag == 'tag':

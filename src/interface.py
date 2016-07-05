@@ -14,9 +14,6 @@ try:
     import readline
 except ImportError:
     print('Module readline not available.')
-else:
-    import rlcompleter
-    readline.parse_and_bind('tab: complete')
 
 
 class Interface:
@@ -33,127 +30,109 @@ class Interface:
                 'func': self._add,
                 'errmsg': 'Cannot add project',
                 'help': 'Create new project'
-            },
-            {
+            }, {
                 'name': 'add',
                 're': r'^add\s+\d+',
                 'func': self._add,
                 'errmsg': 'Cannot add action',
                 'help': 'Create new action'
-            },
-            {
+            }, {
                 'name': 'arch',
                 're': r'^arch\s+\d+',
                 'func': self._archieve,
                 'errmsg': 'Cannot archieve an item',
                 'help': 'Move selected item into archieve'
-            },
-            {
+            }, {
                 'name': 'del',
                 're': r'^del\s+\d+',
                 'func': self._del,
                 'errmsg': 'Cannot delete task',
                 'help': 'Delete selected task'
-            },
-            {
+            }, {
                 'name': 'desc',
                 're': r'^desc\s+\d+',
                 'func': self._desc,
                 'errmsg': 'Cannot add action description',
                 'help': 'Add description to an action'
-            },
-            {
+            }, {
                 'name': 'done',
                 're': r'^done\s+\d+',
                 'func': self._mark_done,
                 'errmsg': 'Cannot locate an item',
                 'help': 'Mark item as done'
-            },
-            {
+            }, {
                 'name': 'due',
                 're': r'^due\s+\d+',
                 'func': self._due,
                 'errmsg': 'Cannot assaign due date',
                 'help': 'Assign due date to an action'
-            },
-            {
+            }, {
                 'name': 'edit',
                 're': r'^edit\s+\d+',
                 'func': self._edit,
                 'errmsg': '',
                 'help': 'Edit name of an action'
-            },
-            {
+            }, {
                 'name': 'help',
                 're': r'^help',
                 'func': self._help,
                 'errmsg': '',
                 'help': 'Print this help'
-            },
-            {
+            }, {
                 'name': 'list',
                 're': r'^list',
                 'func': self._list,
                 'errmsg': 'Cannot list all items',
                 'help': 'List all items'
-            },
-            {
+            }, {
                 'name': 'move',
                 're': r'^move\s+\d+\s+to\s+\d+',
                 'func': self._move,
                 'errmsg': '',
                 'help': 'Move an action between projects/areas'
-            },
-            {
+            }, {
                 'name': 'save',
                 're': r'^save',
                 'func': self._save,
                 'errmsg': '',
                 'help': 'Save list to the file'
-            },
-            {
+            }, {
                 'name': 'show',
                 're': r'^show',
                 'func': self._show,
                 'errmsg': '',
                 'help': 'Show/hide some of the information'
-            },
-            {
+            }, {
                 'name': 'sort',
                 're': r'^sort',
                 'func': self._sort,
                 'errmsg': '',
                 'help': 'Sort current list'
-            },
-            {
+            }, {
                 'name': 'select, s',
                 're': r'^(select|s)',
                 'func': self._select,
                 'errmsg': '',
                 'help': 'Filter items to display'
-            },
-            {
+            }, {
                 'name': 'tag',
                 're': r'^tag\s+\d+',
                 'func': self._tag,
                 'errmsg': 'Cannot assaign tag',
                 'help': 'Assign tags to an action'
-            },
-            {
+            }, {
                 'name': 'undone',
                 're': r'^undone\s+\d+',
                 'func': self._mark_undone,
                 'errmsg': 'Cannot locate an item',
                 'help': 'Mark item as not done'
-            },
-            {
+            }, {
                 'name': 'view, v',
                 're': r'^v\s+',
                 'func': self._alias,
                 'errmsg': '',
                 'help': 'Load pre-defined view'
-            },
-            {
+            }, {
                 'name': 'quit',
                 're': r'^(q|quit)$',
                 'func': None,
@@ -177,8 +156,8 @@ class Interface:
         self._show_query(self.user_filter)
 
         suggestions = [x.get('name') for x in self.commands]
-        suggestions.extend(['show_tags', 'show_description',
-            'show_due_date', 'today', 'tomorrow', 'yesterday'])
+        suggestions.extend(['show_tags', 'show_description', 'show_due_date',
+                            'today', 'tomorrow', 'yesterday'])
 
         completer = cpl.Completer(suggestions)
         readline.set_completer(completer.complete)
@@ -192,13 +171,13 @@ class Interface:
                 break
 
             self._proceed_cmd(cmd)
-            
+
     def _proceed_cmd(self, cmd, show=True):
-        for opt in self.commands:
-            if re.search(opt.get('re'), cmd):
+        for op in self.commands:
+            if re.search(op.get('re'), cmd):
                 try:
-                    if not opt.get('func')(cmd):
-                        print(opt.get('errmsg'))
+                    if not op.get('func')(cmd):
+                        print(op.get('errmsg'))
                     else:
                         if show:
                             self._show_query(self.user_filter)
@@ -208,6 +187,11 @@ class Interface:
                     break
 
     def _sort(self, cmd):
+        def _sort_by_due(x):
+            if x.due_date:
+                return datetime.datetime.strptime(x.due_date, '%d-%m-%Y')
+            return datetime.datetime.now()
+
         pattern = '^sort\s+(name|tag|due|name|)\s*(asc|desc|)$'
         match = re.match(pattern, cmd)
 
@@ -227,8 +211,7 @@ class Interface:
                 self.db._sort_rev = False
 
             if by == 'due':
-                self.db._sort_by = lambda x: datetime.datetime.strptime(x.due_date, 
-                    '%d-%m-%Y') if x.due_date else datetime.datetime.now()
+                self.db._sort_by = _sort_by_due
             elif by == 'name':
                 self.db._sort_by = lambda x: x.name
 
@@ -246,7 +229,7 @@ class Interface:
                 self.options[option] = True
             return True
 
-        return False       
+        return False
 
     def _get_item(self, n):
         """Get an n-th item from the list given a user filter is applied.
@@ -275,8 +258,8 @@ class Interface:
         """
         match = re.search('arch\s+(\d+)(?:\s*-\s*)?(\d+)?$', cmd)
         if match:
-            a = int( match.group((1)) )
-            b = int( match.group((2)) ) if match.group(2) else a
+            a = int(match.group((1)))
+            b = int(match.group((2))) if match.group(2) else a
 
             item_list = []
 
@@ -296,11 +279,12 @@ class Interface:
         """
         match = re.search('move\s+(\d+)\s+to\s+(\d+)', cmd)
         if match:
-            item = self._get_item( int(match.group(1)) )
-            dest = self._get_item( int(match.group(2)) )
+            item = self._get_item(int(match.group(1)))
+            dest = self._get_item(int(match.group(2)))
 
             if isinstance(item(), it.Action):
-                if isinstance(dest(), it.Project) or isinstance(dest(), it.Area):
+                if isinstance(dest(), it.Project) or isinstance(dest(),
+                                                                it.Area):
                     dest().actions.append(copy.deepcopy(item()))
                     item().delete()
                     return True
@@ -312,7 +296,7 @@ class Interface:
         """
         match = re.search('edit\s+(\d+)\s+(.*?)$', cmd)
         if match:
-            item = self._get_item( int(match.group(1)) )
+            item = self._get_item(int(match.group(1)))
             item().name = match.group(2)
             return True
 
@@ -333,19 +317,19 @@ class Interface:
         match = re.match(pattern, cmd)
 
         if match:
-            item = self._get_item( int(match.group(1)) )
+            item = self._get_item(int(match.group(1)))
             item().delete()
             return True
 
-        return False       
-            
+        return False
+
     def _help(self, cmd):
         """List all available commands.
         """
         print('Full list of available commands:')
         for x in self.commands:
-            print(x.get('name') + (' ' * (15 - len(x['name']))) 
-                  + ' - ' + x['help'])
+            print(x.get('name') + (' ' *
+                                   (15 - len(x['name']))) + ' - ' + x['help'])
         return False
 
     def _select(self, cmd):
@@ -357,9 +341,9 @@ class Interface:
         pos = [m.start() for m in re.finditer(tags_pattern, cmd)]
         pos.append(None)
         args = {}
-        
+
         for i in range(0, len(pos) - 1):
-            s = re.search(tags_pattern + ' (.*?)$', cmd[pos[i]:pos[i+1]])
+            s = re.search(tags_pattern + ' (.*?)$', cmd[pos[i]:pos[i + 1]])
             if s:
                 k, v = s.groups()
                 v = v.rstrip()
@@ -375,6 +359,7 @@ class Interface:
                     args[k] = [v]
         if not args:
             return False
+
         self.user_filter.update(args)
 
         return True
@@ -398,7 +383,7 @@ class Interface:
         match = re.search('done\s+(\d+)', cmd)
 
         if match:
-            item = self._get_item( int(match.group(1)) )
+            item = self._get_item(int(match.group(1)))
             item().mark_done(undo=undo)
             return True
 
@@ -410,7 +395,7 @@ class Interface:
         match = re.search('desc\s+(\d+)\s+(.*?)$', cmd)
 
         if match:
-            item = self._get_item( int(match.group(1)) )
+            item = self._get_item(int(match.group(1)))
             item().description = match.group(2)
             return True
 
@@ -428,12 +413,13 @@ class Interface:
         match = re.match(pattern, cmd)
 
         if match:
-            item = self._get_item( int(match.group(2)) )
+            item = self._get_item(int(match.group(2)))
             name = match.group(3)
             type_ = match.group(1)
 
             if type_ == 'add':
-                if isinstance(item(), it.Area) or isinstance(item(), it.Project):
+                if isinstance(item(), it.Area) or isinstance(item(),
+                                                             it.Project):
                     item().actions.append(it.Action(name))
                     return True
             else:
@@ -453,9 +439,9 @@ class Interface:
         match = re.match(pattern, cmd)
 
         if match:
-            item = self._get_item( int(match.group(1)) )
+            item = self._get_item(int(match.group(1)))
 
-            if isinstance(item(), Action):
+            if isinstance(item(), it.Action):
                 tags = match.group(2)
                 tags = tags.split(' ')
                 for tag in tags:
@@ -469,9 +455,9 @@ class Interface:
         """
         pattern = 'due\s+(\d+)\s+(.*?)$'
         match = re.match(pattern, cmd)
-        
+
         if match:
-            item = self._get_item( int(match.group(1)) )
+            item = self._get_item(int(match.group(1)))
             date = fmt.interpret_date(match.group(2))
 
             if isinstance(item(), it.Action) or isinstance(item(), it.Project):
@@ -479,4 +465,3 @@ class Interface:
                 return True
 
         return False
-

@@ -10,7 +10,7 @@
 				<tag>urgent</tag>
 				<tag>DUpa</tag>
 			</action>
-			<action archieved="False" done="False" name="Task 2">
+			<action archieved="True" done="False" name="Task 2">
 				<tag>!</tag>
 				<tag>imr</tag>
 				<tag>y</tag>
@@ -18,6 +18,8 @@
 				<due>12-06-2016</due>
 			</action>
 			<action archieved="True" done="False" name="Task"/>
+			<action archieved="True" done="False" name="Task 1"/>
+			<action archieved="True" done="False" name="Task 3"/>
 		</project>
 		<action archieved="True" done="True" name="Yet another task">
 			<tag>koel</tag>

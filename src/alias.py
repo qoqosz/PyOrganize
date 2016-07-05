@@ -1,5 +1,6 @@
 import re
 
+
 class Alias:
     def __init__(self, alias_file):
         self.alias = {}

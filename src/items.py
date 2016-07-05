@@ -1,6 +1,6 @@
 class Action(object):
     """Define basic building block - the action.
-    """ 
+    """
     def __init__(self, name, description=''):
         self.name = name
         self.description = description
@@ -30,7 +30,7 @@ class Action(object):
             self.is_done = True
 
     def mark_archieved(self):
-        self.is_archieved =  True
+        self.is_archieved = True
 
     def get(self, attr):
         if attr == 'name':
