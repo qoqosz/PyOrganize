@@ -4,7 +4,28 @@ import re
 import items as it
 
 
-def interpret_date(line):
+def filter_date(line):
+    pair = re.search('([<>]?=|[<>]|)\s*(.*?)$', line)
+
+    if pair:
+        operator = pair.group(1)
+        date = format_date(pair.group(2))
+
+        if operator == '>=':
+            return lambda x: x >= date
+        elif operator == '<=':
+            return lambda x: x <= date
+        elif operator == '>':
+            return lambda x: x > date
+        elif operator == '<':
+            return lambda x: x < date
+        else:
+            return lambda x: x == date
+
+    return None
+
+
+def format_date(line):
     date = None
     if re.search('(today|td)', line):
         date = datetime.datetime.now()

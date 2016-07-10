@@ -186,6 +186,41 @@ class Interface:
                 finally:
                     break
 
+    def _select(self, cmd):
+        """Filter mechanism.
+        """
+        self.user_filter = self.default_filter()
+        tags = ['tag', 'due', 'name', 'done', 'arch', 'act', 'proj', 'area']
+        tags_pattern = '(' + '|'.join(tags) + ')'
+        pos = [m.start() for m in re.finditer(tags_pattern, cmd)]
+        pos.append(None)
+        args = {}
+
+        for i in range(0, len(pos) - 1):
+            s = re.search(tags_pattern + '\s*(.*?)$', cmd[pos[i]:pos[i + 1]])
+            if s:
+                k, v = s.groups()
+                v = v.rstrip()
+
+                if k in ['done', 'arch']:
+                    v = v not in ['False']
+                elif k in ['due']:
+                    v = fmt.filter_date(v)
+                    if not v:
+                        raise ValueError('Incorrect comparison operator')
+
+                if k in args:
+                    args[k].append(v)
+                else:
+                    args[k] = [v]
+
+        if not args:
+            return False
+
+        self.user_filter.update(args)
+
+        return True
+
     def _sort(self, cmd):
         def _sort_by_due(x):
             if x.due_date:
@@ -332,38 +367,6 @@ class Interface:
                                    (15 - len(x['name']))) + ' - ' + x['help'])
         return False
 
-    def _select(self, cmd):
-        """Filter mechanism.
-        """
-        self.user_filter = self.default_filter()
-        tags = ['tag', 'due', 'name', 'done', 'arch', 'act', 'proj', 'area']
-        tags_pattern = '(' + '|'.join(tags) + ')'
-        pos = [m.start() for m in re.finditer(tags_pattern, cmd)]
-        pos.append(None)
-        args = {}
-
-        for i in range(0, len(pos) - 1):
-            s = re.search(tags_pattern + ' (.*?)$', cmd[pos[i]:pos[i + 1]])
-            if s:
-                k, v = s.groups()
-                v = v.rstrip()
-
-                if k in ['done', 'arch']:
-                    v = v not in ['False']
-                elif k in ['due']:
-                    v = fmt.interpret_date(v)
-
-                if k in args:
-                    args[k].append(v)
-                else:
-                    args[k] = [v]
-        if not args:
-            return False
-
-        self.user_filter.update(args)
-
-        return True
-
     def _list(self, cmd):
         """Default view - all non-archieved items.
         """
@@ -458,7 +461,7 @@ class Interface:
 
         if match:
             item = self._get_item(int(match.group(1)))
-            date = fmt.interpret_date(match.group(2))
+            date = fmt.format_date(match.group(2))
 
             if isinstance(item(), it.Action) or isinstance(item(), it.Project):
                 item().due_date = date

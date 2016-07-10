@@ -1,3 +1,6 @@
+from formatter import format_date
+
+
 class DataBase:
     """DataBase object stores all the information from the xml file into memory.
     """
@@ -15,9 +18,6 @@ class DataBase:
             yield area
 
     def append(self, area):
-        self.areas.append(area)
-
-    def add_area(self, area):
         self.areas.append(area)
 
     def query_all(self):
@@ -66,8 +66,12 @@ class DataBase:
                     if not (set(node.tags) & set(v)):
                         return False
                 elif k == 'due':
-                    if not (set([node.due_date]) & set(v)):
+                    if not node.due_date:
                         return False
+                    for due in v:
+                        if due(format_date(node.due_date)):
+                            return True
+                    return False
                 elif k == 'done':
                     if not (set([node.is_done]) & set(v)):
                         return False

@@ -20,6 +20,15 @@
 			<action archieved="True" done="False" name="Task"/>
 			<action archieved="True" done="False" name="Task 1"/>
 			<action archieved="True" done="False" name="Task 3"/>
+			<action archieved="False" done="False" name="Task 1">
+				<due>10-07-2016</due>
+			</action>
+			<action archieved="False" done="False" name="Task 2">
+				<due>11-07-2016</due>
+			</action>
+			<action archieved="False" done="False" name="Task 3">
+				<due>12-07-2016</due>
+			</action>
 		</project>
 		<action archieved="True" done="True" name="Yet another task">
 			<tag>koel</tag>

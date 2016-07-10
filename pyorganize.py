@@ -14,12 +14,11 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see http://www.gnu.org/licenses/.
 """
-import src.interface as interface
+import gtd
 
-__version__ = 0.1
 
 if __name__ == '__main__':
-    db = interface.io.load('tasks.xml')
-    ui = interface.Interface(db)
+    db = gtd.load('tasks.xml')
+    ui = gtd.Interface(db)
     ui.start()
-    interface.io.save(db)
+    gtd.save(db)
