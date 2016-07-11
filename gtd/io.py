@@ -1,17 +1,21 @@
+# -*- coding: utf-8 -*-
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
 import xml.dom.minidom  # just to prettify the output
-import os
 import db
+import os
 import items as it
+import sys
 
 _db_file_name = ''
 _EMPTY_DB = """<?xml version="1.0" encoding="utf-8"?>
 <data>
     <area name="Inbox"/>
 </data>"""
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 
 def save(database, file_name=None):
@@ -95,7 +99,7 @@ def _prettify(xml_string):
     """Return a pretty-printed XML string for the xml.
     """
     return xml.dom.minidom.parseString(xml_string).toprettyxml(
-        encoding='utf-8')
+        encoding='UTF-8')
 
 
 def _eat_attributes(object, node):
