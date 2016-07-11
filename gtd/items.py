@@ -23,6 +23,12 @@ class Action(object):
             'archieved': str(self.is_archieved)
         }
 
+    def clean_tags(self):
+        self.tags = []
+
+    def clean_duedate(self):
+        self.due_date = None
+
     def mark_done(self, undo=False):
         if undo:
             self.is_done = False

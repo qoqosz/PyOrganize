@@ -43,6 +43,12 @@ class Interface:
                 'errmsg': 'Cannot archieve an item',
                 'help': 'Move selected item into archieve'
             }, {
+                'name': 'clean',
+                're': r'^(clean|cl)\s+\d+',
+                'func': self._clean,
+                'errmsg': 'Cannot clean item attributes',
+                'help': 'Clean action attributes: due date or tags'
+            }, {
                 'name': 'del',
                 're': r'^del\s+\d+',
                 'func': self._del,
@@ -182,9 +188,27 @@ class Interface:
                         if show:
                             self._show_query(self.user_filter)
                 except Exception, e:
-                    print 'Exception: ' + str(e)
+                    print('Exception: ' + str(e))
+                    print(op.get('name') + ': ' + op.get('errmsg'))
                 finally:
                     break
+
+    def _show_query(self, args):
+        i = 0
+        for node in self.db.query(args):
+            i += 1
+            print(str(i) + fmt.format_item(node, self.options))
+        return True
+
+    def _get_item(self, n):
+        """Get an n-th item from the list given a user filter is applied.
+        """
+        i = 0
+        for node in self.db.query(self.user_filter):
+            i += 1
+            if i == n:
+                return weakref.ref(node)
+        raise IndexError('Index %d does not exist.' % n)
 
     def _select(self, cmd):
         """Filter mechanism.
@@ -266,15 +290,28 @@ class Interface:
 
         return False
 
-    def _get_item(self, n):
-        """Get an n-th item from the list given a user filter is applied.
+    def _add(self, cmd):
+        """Add action or project.
         """
-        i = 0
-        for node in self.db.query(self.user_filter):
-            i += 1
-            if i == n:
-                return weakref.ref(node)
-        raise IndexError('Index %d does not exist.' % n)
+        pattern = '(add proj|add)\s+(\d+)\s+(.*?)$'
+        match = re.match(pattern, cmd)
+
+        if match:
+            item = self._get_item(int(match.group(2)))
+            name = match.group(3)
+            type_ = match.group(1)
+
+            if type_ == 'add':
+                if isinstance(item(), it.Area) or isinstance(item(),
+                                                             it.Project):
+                    item().actions.append(it.Action(name))
+                    return True
+            else:
+                if isinstance(item(), it.Area):
+                    item().projects.append(it.Project(name))
+                    return True
+
+        return False
 
     def _alias(self, cmd):
         match = re.search('v\s+(.*?)(\s.*?)?$', cmd)
@@ -308,21 +345,19 @@ class Interface:
 
         return False
 
-    def _move(self, cmd):
-        """Actions only.
-        Move action from one project/area to another.
+    def _clean(self, cmd):
+        """Clean action's attribues - due date, tags or both.
         """
-        match = re.search('move\s+(\d+)\s+to\s+(\d+)', cmd)
+        match = re.search('(clean|cl)\s+(\d+)', cmd)
         if match:
-            item = self._get_item(int(match.group(1)))
-            dest = self._get_item(int(match.group(2)))
+            item = self._get_item(int(match.group(2)))
 
-            if isinstance(item(), it.Action):
-                if isinstance(dest(), it.Project) or isinstance(dest(),
-                                                                it.Area):
-                    dest().actions.append(copy.deepcopy(item()))
-                    item().delete()
-                    return True
+            if cmd.find('tag') > -1:
+                item().clean_tags()
+            if cmd.find('due') > -1:
+                item().clean_duedate()
+
+            return True
 
         return False
 
@@ -337,13 +372,6 @@ class Interface:
 
         return False
 
-    def _save(self, cmd):
-        """Save database to a file.
-        """
-        print('Saving')
-        io.save(self.db)
-        return False
-
     def _del(self, cmd):
         """delete = mark as archieved and set a is_deleted flag to True
         This way, at a program exit an item won't be saved
@@ -355,6 +383,34 @@ class Interface:
             item = self._get_item(int(match.group(1)))
             item().delete()
             return True
+
+        return False
+
+    def _desc(self, cmd):
+        """Set a description of an item.
+        """
+        match = re.search('desc\s+(\d+)\s+(.*?)$', cmd)
+
+        if match:
+            item = self._get_item(int(match.group(1)))
+            item().description = match.group(2)
+            return True
+
+        return False
+
+    def _due(self, cmd):
+        """Set a due date for an action or a project.
+        """
+        pattern = 'due\s+(\d+)\s+(.*?)$'
+        match = re.match(pattern, cmd)
+
+        if match:
+            item = self._get_item(int(match.group(1)))
+            date = fmt.format_date(match.group(2))
+
+            if isinstance(item(), it.Action) or isinstance(item(), it.Project):
+                item().due_date = date
+                return True
 
         return False
 
@@ -373,13 +429,6 @@ class Interface:
         self.user_filter = self.default_filter()
         return True
 
-    def _show_query(self, args):
-        i = 0
-        for node in self.db.query(args):
-            i += 1
-            print(str(i) + fmt.format_item(node, self.options))
-        return True
-
     def _mark_done(self, cmd, undo=False):
         """Mark item as done.
         """
@@ -392,44 +441,34 @@ class Interface:
 
         return False
 
-    def _desc(self, cmd):
-        """Set a description of an item.
-        """
-        match = re.search('desc\s+(\d+)\s+(.*?)$', cmd)
-
-        if match:
-            item = self._get_item(int(match.group(1)))
-            item().description = match.group(2)
-            return True
-
-        return False
-
     def _mark_undone(self, cmd):
         """Mark item as undone.
         """
         return self._mark_done(cmd, True)
 
-    def _add(self, cmd):
-        """Add action or project.
+    def _move(self, cmd):
+        """Actions only.
+        Move action from one project/area to another.
         """
-        pattern = '(add proj|add)\s+(\d+)\s+(.*?)$'
-        match = re.match(pattern, cmd)
-
+        match = re.search('move\s+(\d+)\s+to\s+(\d+)', cmd)
         if match:
-            item = self._get_item(int(match.group(2)))
-            name = match.group(3)
-            type_ = match.group(1)
+            item = self._get_item(int(match.group(1)))
+            dest = self._get_item(int(match.group(2)))
 
-            if type_ == 'add':
-                if isinstance(item(), it.Area) or isinstance(item(),
-                                                             it.Project):
-                    item().actions.append(it.Action(name))
-                    return True
-            else:
-                if isinstance(item(), it.Area):
-                    item().projects.append(it.Project(name))
+            if isinstance(item(), it.Action):
+                if isinstance(dest(), it.Project) or isinstance(dest(),
+                                                                it.Area):
+                    dest().actions.append(copy.deepcopy(item()))
+                    item().delete()
                     return True
 
+        return False
+
+    def _save(self, cmd):
+        """Save database to a file.
+        """
+        print('Saving')
+        io.save(self.db)
         return False
 
     def _tag(self, cmd):
@@ -449,22 +488,6 @@ class Interface:
                 tags = tags.split(' ')
                 for tag in tags:
                     item().tags.append(tag)
-                return True
-
-        return False
-
-    def _due(self, cmd):
-        """Set a due date for an action or a project.
-        """
-        pattern = 'due\s+(\d+)\s+(.*?)$'
-        match = re.match(pattern, cmd)
-
-        if match:
-            item = self._get_item(int(match.group(1)))
-            date = fmt.format_date(match.group(2))
-
-            if isinstance(item(), it.Action) or isinstance(item(), it.Project):
-                item().due_date = date
                 return True
 
         return False
