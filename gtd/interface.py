@@ -197,7 +197,7 @@ class Interface:
         i = 0
         for node in self.db.query(args):
             i += 1
-            print(str(i) + fmt.format_item(node, self.options))
+            print(fmt.format_item(i, node, self.options))
         return True
 
     def _get_item(self, n):

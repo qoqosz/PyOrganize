@@ -1,5 +1,12 @@
 import datetime
+from os import popen
 import re
+try:
+    import colorama
+    io_color = True
+except ImportError:
+    io_color = False
+import textwrap
 
 import items as it
 
@@ -56,31 +63,86 @@ def format_date(line):
     return date.strftime('%d-%m-%Y')
 
 
-def format_item(item, options):
+def format_description(desc, prefix='\t\t\t'):
+    rows, columns = popen('stty size', 'r').read().split()
+    if not columns:
+        return desc
+
+    sz = int(columns) - len(prefix.expandtabs())
+    return textwrap.fill('"' + desc + '"', width=sz, subsequent_indent=prefix)
+    # if len(desc) > columns:
+    #     ret = ''
+    #     lines = 1
+    #     last = 0
+    #     space = [x.start() for x in re.finditer(' ', desc)]
+
+    #     for current, prev in zip(space[:1], space[:-1]):
+    #         if current > columns * lines:
+    #             ret += prefix + desc[last:prev] + '!'
+    #             lines += 1
+    #             last = current
+
+    #     return '\n' + ret
+    # return '\n' + prefix + desc
+
+
+def format_item(idx, item, options):
     ret = ''
+    proj_indent = 8
+    action_indent = 9
 
     if isinstance(item, it.Area):
-        ret = '*** ' + item.name + ' ***'
+        ret = format_area(idx, item)
+
     elif isinstance(item, it.Project):
-        ret = '\t\t' + item.name
+        ret = format_project(idx, item, options, indent=proj_indent)
 
-        if item.due_date and options.get('show_due_date'):
-            ret = ret + ' @ ' + item.due_date
-        ret += '\n\t\t' + ('=' * len(item.name))
     elif isinstance(item, it.Action):
-        ret = '\t\t [' + ('X' if item.is_done else ' ') + '] ' + item.name
-
-        if item.description and options.get('show_description'):
-            ret = ret + '\n\t\t\t"' + item.description + '"'
-
-        if (item.tags or item.due_date) and \
-                (options.get('show_tags') or options.get('show_due_date')):
-            ret = ret + '\n\t\t     '
-
-            if item.due_date and options.get('show_due_date'):
-                ret = ret + '@' + item.due_date + '  '
-
-            if item.tags and options.get('show_tags'):
-                ret = ret + ', '.join(['+' + str(x) for x in item.tags])
+        ret = format_action(idx, item, options, indent=action_indent)
 
     return ret
+
+
+def format_area(idx, item):
+    return '{:d}*** {} ***'.format(idx, item.name)
+
+
+def format_project(idx, item, options, indent=8):
+    if io_color:
+        colorama.init()
+        proj = ('{:<' + str(indent) + '}' + colorama.Fore.GREEN + '{}' +
+                colorama.Style.RESET_ALL).format(idx, item.name)
+    else:
+        proj = ('{:<' + str(indent) + '}{}').format(idx, item.name)
+
+    if item.due_date and ('show_due_date' in options):
+        proj += ' @ ' + item.due_date
+
+    if io_color:
+        proj += '\n' + (' ' * indent) + colorama.Style.BRIGHT + \
+                ('=' * len(item.name)) + colorama.Style.RESET_ALL
+    else:
+        proj += '\n' + (' ' * indent) + ('=' * len(item.name))
+
+    return proj
+
+
+def format_action(idx, item, options, indent):
+    act = ('{:<' + str(indent) + '}[{}] {}').format(
+        idx, 'X' if item.is_done else ' ', item.name)
+
+    if item.description and ('show_description' in options):
+        prefix = ' ' * (indent + 6)
+        act += '\n' + prefix + \
+            format_description(item.description, prefix=prefix)
+
+    if (item.tags or item.due_date) and \
+            (('show_tags' in options) or ('show_due_date' in options)):
+        act += '\n' + ' ' * indent
+
+        if item.due_date and ('show_due_date' in options):
+            act += '@' + item.due_date + ' '
+        if item.tags and ('show_tags' in options):
+            act += ', '.join(['+' + str(x) for x in item.tags])
+
+    return act

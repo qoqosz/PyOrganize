@@ -1,38 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <data>
 	<area name="Inbox">
-		<action archieved="False" done="False" name="Waiting to be categorized"/>
-	</area>
-	<area name="Office">
-		<project archieved="False" done="False" name="Project 1">
-			<action archieved="True" done="False" name="Task 1">
-				<tag>!!!</tag>
-				<tag>urgent</tag>
-				<tag>DUpa</tag>
-			</action>
-			<action archieved="True" done="False" name="Task 2">
-				<tag>!</tag>
-				<tag>imr</tag>
-				<tag>y</tag>
-				<tag>jo</tag>
-				<due>12-06-2016</due>
-			</action>
-			<action archieved="True" done="False" name="Task"/>
-			<action archieved="True" done="False" name="Task 1"/>
-			<action archieved="True" done="False" name="Task 3"/>
-			<action archieved="False" done="False" name="Task 1">
-				<due>10-07-2016</due>
-			</action>
-			<action archieved="False" done="False" name="Task 2">
-				<due>11-07-2016</due>
-			</action>
-			<action archieved="False" done="False" name="Task 3">
-				<due>12-07-2016</due>
+		<project archieved="False" done="False" name="Sample">
+			<action archieved="False" done="False" name="In Sample"/>
+			<action archieved="False" done="False" name="Standalone tasks in areas print first">
+				<description>jhad jhkjfs kdjhf jsdh fksh fjkdsh fjkhs jkshd kjfhs kjhfsjkdh fjksdh jfkshd kfjhsd kfhs kjfhs fhjks fshjk f</description>
 			</action>
 		</project>
-		<action archieved="True" done="True" name="Yet another task">
-			<tag>koel</tag>
-			<tag>dupa</tag>
-		</action>
+		<action archieved="False" done="False" name="ŁążóółŌął"/>
 	</area>
 </data>
