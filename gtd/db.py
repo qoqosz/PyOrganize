@@ -20,20 +20,10 @@ class DataBase:
     def append(self, area):
         self.areas.append(area)
 
-    def query_all(self):
-        def sort_by_done(x):
-            return x.is_done
-
-        for area in self.areas:
-            yield area
-            for project in sorted(area.projects, key=sort_by_done):
-                yield project
-                for action in sorted(project.actions, key=sort_by_done):
-                    yield action
-            for action in sorted(area.actions, key=sort_by_done):
-                yield action
-
     def query(self, args={}):
+        """List all items in a database. Result may be filtered by applying
+        extra conditions in form of an 'args' dictionary.
+        """
         def _check_name(name, name_list):
             x = name.lower()
             y = [z.lower() for z in name_list]
@@ -84,6 +74,12 @@ class DataBase:
             if _check_area(area, args):
                 yield area
 
+                for action in sorted(area.actions,
+                                     key=self._sort_by,
+                                     reverse=self._sort_rev):
+                    if _check_act(action, args):
+                        yield action
+
                 for project in sorted(area.projects,
                                       key=self._sort_by,
                                       reverse=self._sort_rev):
@@ -95,9 +91,3 @@ class DataBase:
                                              reverse=self._sort_rev):
                             if _check_act(action, args):
                                 yield action
-
-                for action in sorted(area.actions,
-                                     key=self._sort_by,
-                                     reverse=self._sort_rev):
-                    if _check_act(action, args):
-                        yield action
