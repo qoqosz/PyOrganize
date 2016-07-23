@@ -4,6 +4,7 @@ import re
 try:
     import colorama
     io_color = True
+    is_color_initialized = False
 except ImportError:
     io_color = False
 import textwrap
@@ -69,27 +70,21 @@ def format_description(desc, prefix='\t\t\t'):
         return desc
 
     sz = int(columns) - len(prefix.expandtabs())
+
     return textwrap.fill('"' + desc + '"', width=sz, subsequent_indent=prefix)
-    # if len(desc) > columns:
-    #     ret = ''
-    #     lines = 1
-    #     last = 0
-    #     space = [x.start() for x in re.finditer(' ', desc)]
-
-    #     for current, prev in zip(space[:1], space[:-1]):
-    #         if current > columns * lines:
-    #             ret += prefix + desc[last:prev] + '!'
-    #             lines += 1
-    #             last = current
-
-    #     return '\n' + ret
-    # return '\n' + prefix + desc
 
 
 def format_item(idx, item, options):
+    global is_color_initialized
+
     ret = ''
     proj_indent = 8
     action_indent = 9
+
+    if io_color:
+        if not is_color_initialized:
+            colorama.init(autoreset=True)
+            is_color_initialized = True
 
     if isinstance(item, it.Area):
         ret = format_area(idx, item)
@@ -104,14 +99,13 @@ def format_item(idx, item, options):
 
 
 def format_area(idx, item):
-    return '{:d}*** {} ***'.format(idx, item.name)
+    return ('{:d}' + colorama.Fore.RED + '*** {} ***').format(idx, item.name)
 
 
 def format_project(idx, item, options, indent=8):
     if io_color:
-        colorama.init()
-        proj = ('{:<' + str(indent) + '}' + colorama.Fore.GREEN + '{}' +
-                colorama.Style.RESET_ALL).format(idx, item.name)
+        proj = ('{:<' + str(indent) + '}' + colorama.Fore.GREEN + '{}').format(
+            idx, item.name)
     else:
         proj = ('{:<' + str(indent) + '}{}').format(idx, item.name)
 
@@ -120,7 +114,7 @@ def format_project(idx, item, options, indent=8):
 
     if io_color:
         proj += '\n' + (' ' * indent) + colorama.Style.BRIGHT + \
-                ('=' * len(item.name)) + colorama.Style.RESET_ALL
+                ('=' * len(item.name))
     else:
         proj += '\n' + (' ' * indent) + ('=' * len(item.name))
 
