@@ -99,7 +99,7 @@ def format_item(idx, item, options):
 
 
 def format_area(idx, item):
-    return ('{:d}' + colorama.Fore.RED + '*** {} ***').format(idx, item.name)
+    return ('{:d}' + colorama.Fore.CYAN + '*** {} ***').format(idx, item.name)
 
 
 def format_project(idx, item, options, indent=8):

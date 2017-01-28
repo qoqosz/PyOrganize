@@ -9,6 +9,9 @@ import formatter as fmt
 import io
 import items as it
 import options as opt
+import os
+
+from threading import Timer
 
 try:
     import readline
@@ -48,6 +51,12 @@ class Interface:
                 'func': self._clean,
                 'errmsg': 'Cannot clean item attributes',
                 'help': 'Clean action attributes: due date or tags'
+            }, {
+                'name': 'clear',
+                're': r'^$',
+                'func': self._clear,
+                'errmsg': 'Cannot clear screen',
+                'help': ''
             }, {
                 'name': 'del',
                 're': r'^del\s+\d+',
@@ -96,6 +105,12 @@ class Interface:
                 'func': self._move,
                 'errmsg': '',
                 'help': 'Move an action between projects/areas'
+            }, {
+                'name': 'notify',
+                're': r'^nt',
+                'func': self._notify,
+                'errmsg': 'Cannot set a notification',
+                'help': 'Set a notification for a task.'
             }, {
                 'name': 'save',
                 're': r'^save',
@@ -159,6 +174,7 @@ class Interface:
     def start(self):
         """Main loop of an interface that reads and parses commands.
         """
+        self._clear()
         self._show_query(self.user_filter)
 
         suggestions = [x.get('name') for x in self.commands]
@@ -179,8 +195,12 @@ class Interface:
             self._proceed_cmd(cmd)
 
     def _proceed_cmd(self, cmd, show=True):
+        self._clear()
+        is_cmd = False
+
         for op in self.commands:
             if re.search(op.get('re'), cmd):
+                is_cmd = True
                 try:
                     if not op.get('func')(cmd):
                         print(op.get('errmsg'))
@@ -192,6 +212,9 @@ class Interface:
                     print(op.get('name') + ': ' + op.get('errmsg'))
                 finally:
                     break
+
+        if not is_cmd:
+            print('Unknown command: ' + cmd)
 
     def _show_query(self, args):
         i = 0
@@ -361,6 +384,12 @@ class Interface:
 
         return False
 
+    def _clear(self, cmd=None):
+        """Clears the screen.
+        """
+        os.system('cls' if os.name == 'nt' else 'clear')
+        return True
+
     def _edit(self, cmd):
         """Edit an item name.
         """
@@ -464,6 +493,9 @@ class Interface:
 
         return False
 
+    def _notify(self, cmd):
+        pass
+
     def _save(self, cmd):
         """Save database to a file.
         """
@@ -475,8 +507,6 @@ class Interface:
         """Apply tags to an action.
         Tags may be given as a comma-separated list.
         """
-        print('Tagging')
-
         pattern = 'tag\s+(\d+)\s+(.*?)$'
         match = re.match(pattern, cmd)
 

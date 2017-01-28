@@ -8,6 +8,7 @@ class Action(object):
         self.is_archieved = False
         self.is_deleted = False
         self.due_date = None
+        self.notify_at = None
         self.tags = []
 
     def __repr__(self):
@@ -17,11 +18,15 @@ class Action(object):
         return '\t\tAction: ' + self.name + ', [' + self.description + ']'
 
     def attributes(self):
-        return {
+        attr = {
             'name': self.name,
             'done': str(self.is_done),
             'archieved': str(self.is_archieved)
         }
+        if self.notify_at:
+            attr['notification'] = '{:%Y.%m.%d %H:%M}'.format(self.notify_at)
+
+        return attr
 
     def clean_tags(self):
         self.tags = []
@@ -37,6 +42,9 @@ class Action(object):
 
     def mark_archieved(self):
         self.is_archieved = True
+
+    def set_notification(self, dt):
+        self.notify_at = dt
 
     def get(self, attr):
         if attr == 'name':

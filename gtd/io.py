@@ -26,57 +26,58 @@ def save(database, file_name=None):
 
     data = ET.Element('data')
 
-    for area in database:
-        if not area.is_deleted:
-            area_elem = ET.SubElement(data, 'area', area.attributes())
-
-            for proj in area.projects:
-                if not proj.is_deleted:
-                    proj_elem = ET.SubElement(area_elem, 'project',
-                                              proj.attributes())
-
-                    if proj.description:
-                        desc = ET.SubElement(proj_elem, 'description')
-                        desc.text = proj.description
-                    if proj.due_date:
-                        due = ET.SubElement(proj_elem, 'due')
-                        due.text = proj.due_date
-
-                    for task in proj.actions:
-                        if not task.is_deleted:
-                            task_elem = ET.SubElement(proj_elem, 'action',
-                                                      task.attributes())
-
-                            if task.description:
-                                desc = ET.SubElement(task_elem, 'description')
-                                desc.text = task.description
-                            if task.tags:
-                                for tag_name in task.tags:
-                                    tag = ET.SubElement(task_elem, 'tag')
-                                    tag.text = tag_name
-                            if task.due_date:
-                                due = ET.SubElement(task_elem, 'due')
-                                due.text = task.due_date
-
-            for task in area.actions:
-                if not task.is_deleted:
-                    task_elem = ET.SubElement(area_elem, 'action',
-                                              task.attributes())
-
-                    if task.description:
-                        desc = ET.SubElement(task_elem, 'description')
-                        desc.text = task.description
-                    if task.tags:
-                        for tag_name in task.tags:
-                            tag = ET.SubElement(task_elem, 'tag')
-                            tag.text = tag_name
-                    if task.due_date:
-                        due = ET.SubElement(task_elem, 'due')
-                        due.text = task.due_date
+    _save_data(data, database)
 
     fOut = open(file_name, 'w')
     fOut.write(_prettify(ET.tostring(data, encoding='utf-8', method='xml')))
     fOut.close()
+
+
+def _save_data(data, database):
+    for area in database:
+        _save_area(data, area)
+
+
+def _save_area(data, area):
+    if not area.is_deleted:
+        area_elem = ET.SubElement(data, 'area', area.attributes())
+
+        for proj in area.projects:
+            _save_project(area_elem, proj)
+
+        for task in area.actions:
+            _save_action(area_elem, task)
+
+
+def _save_project(elem, proj):
+    if not proj.is_deleted:
+        proj_elem = ET.SubElement(elem, 'project', proj.attributes())
+
+        if proj.description:
+            desc = ET.SubElement(proj_elem, 'description')
+            desc.text = proj.description
+        if proj.due_date:
+            due = ET.SubElement(proj_elem, 'due')
+            due.text = proj.due_date
+
+        for task in proj.actions:
+            _save_action(proj_elem, task)
+
+
+def _save_action(elem, task):
+    if not task.is_deleted:
+        task_elem = ET.SubElement(elem, 'action', task.attributes())
+
+        if task.description:
+            desc = ET.SubElement(task_elem, 'description')
+            desc.text = task.description
+        if task.tags:
+            for tag_name in task.tags:
+                tag = ET.SubElement(task_elem, 'tag')
+                tag.text = tag_name
+        if task.due_date:
+            due = ET.SubElement(task_elem, 'due')
+            due.task_elem = task.due_date
 
 
 def load(file_name):
