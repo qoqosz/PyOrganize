@@ -11,19 +11,18 @@ class DataBase:
         self._sort_rev = False
 
     def __iter__(self):
-        """In fact we should iterate over everything,
-        not just areas
-        """
-        for area in self.areas:
-            yield area
+        return self.query()
 
     def append(self, area):
         self.areas.append(area)
 
-    def query(self, args={}):
+    def query(self, args=None):
         """List all items in a database. Result may be filtered by applying
         extra conditions in form of an 'args' dictionary.
         """
+        if args is None:
+            args = {}
+
         def _check_name(name, name_list):
             x = name.lower()
             y = [z.lower() for z in name_list]
