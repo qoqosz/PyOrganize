@@ -11,7 +11,8 @@ class DataBase:
         self._sort_rev = False
 
     def __iter__(self):
-        return self.query()
+        for area in self.areas:
+            yield area
 
     def append(self, area):
         self.areas.append(area)
