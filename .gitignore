@@ -9,3 +9,5 @@ readline_test.py
 *.iml
 
 tasks.xml
+
+*.bak
