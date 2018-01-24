@@ -5,3 +5,7 @@
 readline_test.py
 
 *.xml
+
+*.iml
+
+tasks.xml

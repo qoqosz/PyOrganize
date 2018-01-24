@@ -4,21 +4,18 @@ try:
 except ImportError:
     import xml.etree.ElementTree as ET
 import xml.dom.minidom  # just to prettify the output
-from . import db
+import db
 import os
-from . import items as it
+import items as it
 import sys
-import imp
 
 _db_file_name = ''
 _EMPTY_DB = """<?xml version="1.0" encoding="utf-8"?>
 <data>
     <area name="Inbox"/>
 </data>"""
-imp.reload(sys)
-
-if sys.version_info < (3, 4):
-    sys.setdefaultencoding('utf-8')
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 
 def save(database, file_name=None):
@@ -31,7 +28,7 @@ def save(database, file_name=None):
 
     _save_data(data, database)
 
-    fOut = open(file_name, 'wb')
+    fOut = open(file_name, 'w')
     fOut.write(_prettify(ET.tostring(data, encoding='utf-8', method='xml')))
     fOut.close()
 

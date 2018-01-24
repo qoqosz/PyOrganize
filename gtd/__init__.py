@@ -1,4 +1,4 @@
-from interface import Interface
-from io import load, save
+from .interface import Interface
+from .io import load, save
 
 __version__ = 0.1

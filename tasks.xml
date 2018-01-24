@@ -1,12 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <data>
 	<area name="Inbox">
+		<action archieved="False" done="False" name="Sample task">
+			<description>Description</description>
+			<tag>py</tag>
+			<tag>th</tag>
+			<tag>on</tag>
+		</action>
+	</area>
+	<area name="Next">
 		<project archieved="False" done="False" name="Sample">
-			<action archieved="False" done="False" name="In Sample"/>
-			<action archieved="False" done="False" name="Standalone tasks in areas print first">
-				<description>jhad jhkjfs kdjhf jsdh fksh fjkdsh fjkhs jkshd kjfhs kjhfsjkdh fjksdh jfkshd kfjhsd kfhs kjfhs fhjks fshjk f</description>
+			<action archieved="False" done="False" name="Task in Projec">
+				<description>Description</description>
+				<tag>py</tag>
+				<tag>th</tag>
+				<tag>on</tag>
 			</action>
 		</project>
-		<action archieved="False" done="False" name="ŁążóółŌął"/>
+		<project archieved="False" done="False" name="SSK"/>
+	</area>
+	<area name="Someday">
+		<action archieved="False" done="False" name="Play Baldur's Gate 1 &amp; 2">
+			<tag>Sup</tag>
+			<tag>dsj</tag>
+		</action>
+		<action archieved="False" done="False" name="Dupa"/>
+		<action archieved="False" done="True" name="Task"/>
 	</area>
 </data>

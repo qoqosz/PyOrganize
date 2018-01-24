@@ -2,13 +2,13 @@ import copy
 import datetime
 import re
 import weakref
-from builtins import input
-from . import alias
-from . import completer as cpl
-from . import formatter as fmt
-from . import io
-from . import items as it
-from . import options as opt
+
+import alias
+import completer as cpl
+import formatter as fmt
+import io
+import items as it
+import options as opt
 import os
 
 from threading import Timer
@@ -186,7 +186,7 @@ class Interface:
         readline.parse_and_bind('tab: complete')
 
         while True:
-            cmd = input('> ')
+            cmd = raw_input('> ')
             cmd = cmd.lstrip().rstrip()
 
             if cmd == 'quit' or cmd == 'q':
@@ -207,7 +207,7 @@ class Interface:
                     else:
                         if show:
                             self._show_query(self.user_filter)
-                except Exception as e:
+                except Exception, e:
                     print('Exception: ' + str(e))
                     print(op.get('name') + ': ' + op.get('errmsg'))
                 finally:

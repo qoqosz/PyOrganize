@@ -9,7 +9,7 @@ except ImportError:
     io_color = False
 import textwrap
 
-from . import items as it
+import items as it
 
 
 def filter_date(line):

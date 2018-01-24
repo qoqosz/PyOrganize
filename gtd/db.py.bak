@@ -1,4 +1,4 @@
-from .formatter import format_date
+from formatter import format_date
 
 
 class DataBase:
@@ -34,21 +34,21 @@ class DataBase:
             return False
 
         def _check_area(node, filter):
-            for k, v in filter.items():
+            for k, v in filter.iteritems():
                 if k == 'area':
                     if not _check_name(node.name, v):
                         return False
             return True
 
         def _check_proj(node, filter):
-            for k, v in filter.items():
+            for k, v in filter.iteritems():
                 if k == 'proj':
                     if not _check_name(node.name, v):
                         return False
             return True
 
         def _check_act(node, filter):
-            for k, v in filter.items():
+            for k, v in filter.iteritems():
                 if k == 'act':
                     if not _check_name(node.name, v):
                         return False
@@ -70,39 +70,24 @@ class DataBase:
                         return False
             return True
 
-        def _get_actions(node, filter):
-            return [action
-                    for action
-                    in sorted(node.actions, key=self._sort_by,
-                              reverse=self._sort_rev)
-                    if _check_act(action, filter)]
+        for area in self.areas:
+            if _check_area(area, args):
+                yield area
 
-        def _get_projects(node, filter):
-            has_elem = lambda x: any(_get_actions(x, filter))
+                for action in sorted(area.actions,
+                                     key=self._sort_by,
+                                     reverse=self._sort_rev):
+                    if _check_act(action, args):
+                        yield action
 
-            return [project
-                    for project
-                    in sorted(node.projects, key=self._sort_by,
-                              reverse=self._sort_rev)
-                    if _check_proj(project, filter) and has_elem(project)]
+                for project in sorted(area.projects,
+                                      key=self._sort_by,
+                                      reverse=self._sort_rev):
+                    if _check_proj(project, args):
+                        yield project
 
-        def _get_areas(filter):
-            has_elem = lambda x: (any(_get_actions(x, filter)) or
-                                  any(_get_projects(x, filter)))
-
-            return [area
-                    for area
-                    in self.areas
-                    if _check_area(area, filter) and has_elem(area)]
-
-        for area in _get_areas(args):
-            yield area
-
-            for action in _get_actions(area, args):
-                yield action
-
-            for project in _get_projects(area, args):
-                yield project
-
-                for action in _get_actions(project, args):
-                    yield action
+                        for action in sorted(project.actions,
+                                             key=self._sort_by,
+                                             reverse=self._sort_rev):
+                            if _check_act(action, args):
+                                yield action
