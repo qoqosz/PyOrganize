@@ -24,6 +24,16 @@ class DataBase:
         if args is None:
             args = {}
 
+        def _default_adjusted_args(filter):
+            """Remove default arguments from filter."""
+            f = dict(filter)
+            arch = f.get('arch', None)
+
+            if arch == [True]:
+                f.pop('arch')
+
+            return f
+
         def _check_name(name, name_list):
             x = name.lower()
             y = [z.lower() for z in name_list]
@@ -78,7 +88,13 @@ class DataBase:
                     if _check_act(action, filter)]
 
         def _get_projects(node, filter):
-            has_elem = lambda x: any(_get_actions(x, filter))
+            def has_elem(project):
+                fargs = dict(filter)
+                fargs.pop('arch', None)
+
+                if fargs:
+                    return any(_get_actions(project, fargs))
+                return True
 
             return [project
                     for project
@@ -87,8 +103,14 @@ class DataBase:
                     if _check_proj(project, filter) and has_elem(project)]
 
         def _get_areas(filter):
-            has_elem = lambda x: (any(_get_actions(x, filter)) or
-                                  any(_get_projects(x, filter)))
+            def has_elem(area):
+                fargs = dict(filter)
+                fargs.pop('arch', None)
+
+                if fargs:
+                    return (any(_get_actions(area, fargs)) or
+                            any(_get_projects(area, fargs)))
+                return True
 
             return [area
                     for area
