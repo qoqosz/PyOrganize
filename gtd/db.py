@@ -1,4 +1,5 @@
 from .formatter import format_date
+from .items import Area
 
 
 class DataBase:
@@ -81,6 +82,9 @@ class DataBase:
             return True
 
         def _get_actions(node, filter):
+            if isinstance(node, Area) and 'proj' in filter:
+                return []
+
             return [action
                     for action
                     in sorted(node.actions, key=self._sort_by,

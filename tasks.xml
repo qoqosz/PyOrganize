@@ -15,21 +15,10 @@
 				<tag>py</tag>
 				<tag>th</tag>
 				<tag>on</tag>
+				<tag>!</tag>
 			</action>
 		</project>
-		<project archieved="False" done="False" name="SSK"/>
-		<project archieved="False" done="False" name="Sample"/>
-		<project archieved="False" done="False" name="Nowy"/>
-		<project archieved="False" done="False" name="Dupa"/>
-		<project archieved="False" done="False" name="Now"/>
-		<project archieved="False" done="False" name="Dupa"/>
+		<action archieved="False" done="False" name="Task 1"/>
 	</area>
-	<area name="Someday">
-		<action archieved="False" done="False" name="Play Baldur's Gate 1 &amp; 2">
-			<tag>Sup</tag>
-			<tag>dsj</tag>
-		</action>
-		<action archieved="False" done="False" name="Dupa"/>
-		<action archieved="False" done="True" name="Task"/>
-	</area>
+	<area name="Someday"/>
 </data>
