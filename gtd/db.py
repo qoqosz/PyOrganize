@@ -25,9 +25,9 @@ class DataBase:
         if args is None:
             args = {}
 
-        def _default_adjusted_args(filter):
-            """Remove default arguments from filter."""
-            f = dict(filter)
+        def _default_adjusted_args(fltr):
+            """Remove default arguments from fltr."""
+            f = dict(fltr)
             arch = f.get('arch', None)
 
             if arch == [True]:
@@ -36,30 +36,30 @@ class DataBase:
             return f
 
         def _check_name(name, name_list):
-            x = name.lower()
-            y = [z.lower() for z in name_list]
+            name_lower = name.lower()
+            name_lower_list = [z.lower() for z in name_list]
 
-            for i in y:
-                if i in x:
+            for i_name in name_lower_list:
+                if i_name in name_lower:
                     return True
             return False
 
-        def _check_area(node, filter):
-            for k, v in filter.items():
+        def _check_area(node, fltr):
+            for k, v in fltr.items():
                 if k == 'area':
                     if not _check_name(node.name, v):
                         return False
             return True
 
-        def _check_proj(node, filter):
-            for k, v in filter.items():
+        def _check_proj(node, fltr):
+            for k, v in fltr.items():
                 if k == 'proj':
                     if not _check_name(node.name, v):
                         return False
             return True
 
-        def _check_act(node, filter):
-            for k, v in filter.items():
+        def _check_act(node, fltr):
+            for k, v in fltr.items():
                 if k == 'act':
                     if not _check_name(node.name, v):
                         return False
@@ -81,19 +81,19 @@ class DataBase:
                         return False
             return True
 
-        def _get_actions(node, filter):
-            if isinstance(node, Area) and 'proj' in filter:
+        def _get_actions(node, fltr):
+            if isinstance(node, Area) and 'proj' in fltr:
                 return []
 
             return [action
                     for action
                     in sorted(node.actions, key=self._sort_by,
                               reverse=self._sort_rev)
-                    if _check_act(action, filter)]
+                    if _check_act(action, fltr)]
 
-        def _get_projects(node, filter):
+        def _get_projects(node, fltr):
             def has_elem(project):
-                fargs = dict(filter)
+                fargs = dict(fltr)
                 fargs.pop('arch', None)
 
                 if fargs:
@@ -104,11 +104,11 @@ class DataBase:
                     for project
                     in sorted(node.projects, key=self._sort_by,
                               reverse=self._sort_rev)
-                    if _check_proj(project, filter) and has_elem(project)]
+                    if _check_proj(project, fltr) and has_elem(project)]
 
-        def _get_areas(filter):
+        def _get_areas(fltr):
             def has_elem(area):
-                fargs = dict(filter)
+                fargs = dict(fltr)
                 fargs.pop('arch', None)
 
                 if fargs:
@@ -119,7 +119,7 @@ class DataBase:
             return [area
                     for area
                     in self.areas
-                    if _check_area(area, filter) and has_elem(area)]
+                    if _check_area(area, fltr) and has_elem(area)]
 
         for area in _get_areas(args):
             yield area
